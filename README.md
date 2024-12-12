@@ -11,21 +11,10 @@ Underwater salient object detection (USOD) plays a pivotal role in various visio
 * CUDA 11.8
 
 ## Training
-1. Download the training dataset and set it to the following structure.
-
-2. Revise the following hyper parameters in the `configs/UIE.yml` according to your situation.
-
-3. Begin the training.
-```python
-python train.py
-```
 
 ## Testing
-1. Modify the paths to dataset and pre-trained model. You need to revise the following path in the `configs/parameter.yml` .
-
-2. Begin the testing.
-```python
-python test.py
-```
+ 
 ## Notes
-We will upload the complete code here. Thanks for your attention!
+We will upload the complete code here in the future. Thanks for your attention!
+
+If you encounter any difficulties in the testing process, please feel free to contact us at changlb666@163.com.
