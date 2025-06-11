@@ -6,7 +6,7 @@ Underwater salient object detection (USOD) plays a pivotal role in various visio
 ![image](https://github.com/user-attachments/assets/e1250a0c-462b-48be-9df2-aa1e3213adf4)
 
 ## Requirement
-* Python 3.8
+* Python 3.9
 * Pytorch 2.0.1
 * CUDA 11.8
 
