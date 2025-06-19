@@ -1,0 +1,97 @@
+{
+    "name": "srd_test1",
+    "phase": "train",
+    "gpu_ids": [
+       3
+    ],
+    "path": {
+        "log": "logs",
+        "tb_logger": "tb_logger",
+        "results": "results",
+        "checkpoint": "checkpoint",
+        "resume_state": null
+    },
+    "datasets": {
+        "train": {
+            "name": "FFHQ",
+            "mode": "HR",
+            "dataroot": "./data/WaterDatasetsUSOD10K/Train",
+            "datatype": "img",
+            "l_resolution": "256",
+            "r_resolution": "512",
+            "batch_size": 8,
+            "num_workers": 8,
+            "use_shuffle": true,
+            "data_len": -1
+        },
+        "val": {
+            "name": "CelebaHQ",
+            "mode": "LRHR",
+            "dataroot": "./data/WaterDatasetsUSOD10K/Test",
+            "datatype": "img", 
+            "l_resolution": "256",
+            "r_resolution": "512",
+            "data_len": -1
+        }
+    },
+    "model": {
+        "which_model_G": "sr3",
+        "finetune_norm": false,
+        "unet": {
+            "in_channel": 7,
+            "out_channel": 3,
+            "inner_channel": 64,
+            "norm_groups": 16,
+            "channel_multiplier": [
+                1,
+                2,
+                4,
+                8
+                // 8,
+                // 16,
+            ],
+            "attn_res": [
+                 16
+            ],
+            "res_blocks": 2,
+            "dropout": 0
+        },
+        "beta_schedule": {
+            "train": {
+                "schedule": "linear",
+                "n_timestep": 1000,
+                "linear_start": 1e-4,
+                "linear_end": 0.02
+            },
+            "val": {
+                "schedule": "linear",
+                "n_timestep": 1000,
+                "linear_start": 1e-4,
+                "linear_end": 0.02
+            }
+        },
+        "diffusion": {
+            "image_size": 256,
+            "channels": 3,
+            "conditional": true
+        }
+    },
+    "train": {
+        "n_iter": 5e5,
+        "val_freq": 500,
+        "save_checkpoint_freq": 10000,
+        "print_freq": 10,
+        "optimizer": {
+            "type": "adam",
+            "lr": 3e-05
+        },
+        "ema_scheduler": {
+            "step_start_ema": 5000,
+            "update_ema_every": 1,
+            "ema_decay": 0.9999
+        }
+    },
+    "wandb": {
+        "project": "distributed_high_sr_ffhq"
+    }
+}
