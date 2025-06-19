@@ -17,6 +17,4 @@ Underwater salient object detection (USOD) plays a pivotal role in various visio
  Python test.py
 
 ## Notes
-We will upload the Full code here in the future. Thanks for your attention!
-
 If you encounter any difficulties in the testing process, please feel free to contact us at changlb666@163.com.
