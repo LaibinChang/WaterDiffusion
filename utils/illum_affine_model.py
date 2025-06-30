@@ -59,11 +59,10 @@ def fit_brightening_params(
     assert input.size(0) == 3 and target.size(0) == 3
     assert 0.0 <= mask.min() and mask.max() <= 1.0
 
-    # Use only (apparently shadowed) region to avoid errors around boundary
     default_w, default_b = [1.0, 1.0, 1.0], [0.0, 0.0, 0.0]
 
-    shadow = input.numpy()
-    shadow_free = target.numpy()
+    water = input.numpy()
+    water_free = target.numpy()
     cond = (mask > mask_thresh)
 
     W = torch.ones_like(target).float()
@@ -71,7 +70,7 @@ def fit_brightening_params(
 
     ids = torch.zeros_like(mask)
     if len(torch.unique(ids[cond])) == 0:
-        # shadow region is cropped out
+        # mask region is cropped out
         return torch.Tensor(default_w).float(), torch.Tensor(default_b).float()
 
     if cond.sum() < N_min:  # We don't fit line
@@ -79,20 +78,9 @@ def fit_brightening_params(
     else:
         coef_list = []
         for i in range(3):  # for each RGB channel
-            if len(np.unique(shadow[i][cond])) < 2:
+            if len(np.unique(water[i][cond])) < 2:
                 # Difficult to fit;
                 coef = [1.0, 0.0]
-            # try:
-            #     # coef = np.polyfit(
-            #     #     shadow[i][cond], shadow_free[i][cond], 1)
-            #     coef = np.polyfit(
-            #         shadow[i][cond].flatten(),
-            #         shadow_free[i][cond].flatten(),
-            #         1
-            #     )
-            # except ValueError:
-            #     # print(shadow[i][cond], shadow_free[i][cond])
-            #     coef = [1.0, 0.0]
             coef = [1.0, 0.0]
             coef_list.append(coef)
         w, b = zip(*coef_list)
