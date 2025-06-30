@@ -11,7 +11,23 @@ Underwater salient object detection (USOD) plays a pivotal role in various visio
 * CUDA 11.8
 
 ## Training
-1. Download the [dataset](https://drive.google.com/file/d/1XDqspht0jBNDz4m-8S8_srBkFmkWrxh3/view?usp=drive_link).
+1. Download the [sample data](https://drive.google.com/file/d/1XDqspht0jBNDz4m-8S8_srBkFmkWrxh3/view?usp=drive_link) and set it to the following structure.
+
+```
+|-- WaterDatasets
+    |-- train
+        |-- image 
+        |-- image_gt  
+        |-- medium_map
+        |-- mask  
+        |-- mask_gt
+    |-- val
+        |-- image 
+        |-- image_gt  
+        |-- medium_map
+        |-- mask  
+        |-- mask_gt
+```
 
 2. Revise the following hyper parameters in the `config/config.json` according to your situation.
    
