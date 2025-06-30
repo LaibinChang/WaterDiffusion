@@ -16,21 +16,18 @@ class USODDataset(Dataset):
         self.need_LR = need_LR
         self.split = split
         if split == 'train':
-            gt_dir = 'train_hr256'
-            input_dir = 'train_lr'
-            mtm_dir = 'train_mtm'
-            mask_dir = 'train_mask'
-            maskR_dir = 'train_maskR'
-            # gt_dir = 'Normal'
-            # input_dir = 'Low'
+            input_dir = 'image'
+            gt_dir = 'image_gt'
+            mtm_dir = 'medium_map'
+            mask_dir = 'mask'
+            maskR_dir = 'mask_gt'
+
         else:
-            gt_dir = 'test_hr256'
-            input_dir = 'test_lr'
-            mtm_dir = 'test_mtm'
-            mask_dir = 'test_mask'
-            maskR_dir = 'test_maskR'
-            # gt_dir = 'Normal'
-            # input_dir = 'Low'
+            input_dir = 'image'
+            gt_dir = 'image_gt'
+            mtm_dir = 'medium_map'
+            mask_dir = 'mask'
+            maskR_dir = 'mask_gt'
 
         if datatype == 'lmdb':
             self.env = lmdb.open(dataroot, readonly=True, lock=False,
