@@ -16,5 +16,19 @@ Underwater salient object detection (USOD) plays a pivotal role in various visio
 ## Testing
  Python test.py
 
+## Citation
+please cite our publication:
+```
+@inproceedings{chang2025waterdiffusion,
+  title={WaterDiffusion: Learning a Prior-involved Unrolling Diffusion for Joint Underwater Saliency Detection and Visual Restoration},
+  author={Chang, Laibin and Wang, Yunke and Deng, Longxiang and Du, Bo and Xu, Chang},
+  booktitle={Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume={39},
+  number={2},
+  pages={1998--2006},
+  year={2025}
+}
+```
+
 ## Notes
-If you encounter any difficulties in the testing process, please feel free to contact us at changlb666@163.com.
+If you have any questions, please feel free to contact us at changlb666@163.com.
