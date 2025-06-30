@@ -11,28 +11,28 @@ logger = logging.getLogger('base')
 class EMAHelper(object):
     def __init__(self, mu=0.9999):
         self.mu = mu
-        self.shadow = {}
+        self.water = {}
 
     def register(self, module):
         if isinstance(module, nn.DataParallel):
             module = module.module
         for name, param in module.named_parameters():
             if param.requires_grad:
-                self.shadow[name] = param.data.clone()
+                self.water[name] = param.data.clone()
 
     def update(self, module):
         if isinstance(module, nn.DataParallel):
             module = module.module
         for name, param in module.named_parameters():
             if param.requires_grad:
-                self.shadow[name].data = (1. - self.mu) * param.data + self.mu * self.shadow[name].data
+                self.water[name].data = (1. - self.mu) * param.data + self.mu * self.water[name].data
 
     def ema(self, module):
         if isinstance(module, nn.DataParallel):
             module = module.module
         for name, param in module.named_parameters():
             if param.requires_grad:
-                param.data.copy_(self.shadow[name].data)
+                param.data.copy_(self.water[name].data)
 
     def ema_copy(self, module):
         if isinstance(module, nn.DataParallel):
@@ -47,10 +47,10 @@ class EMAHelper(object):
         return module_copy
 
     def state_dict(self):
-        return self.shadow
+        return self.water
 
     def load_state_dict(self, state_dict):
-        self.shadow = state_dict
+        self.water = state_dict
 
 class DDPM(BaseModel):
     def __init__(self, opt):
