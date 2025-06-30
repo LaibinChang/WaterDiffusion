@@ -21,7 +21,7 @@ Underwater salient object detection (USOD) plays a pivotal role in various visio
         |-- medium_map
         |-- mask  
         |-- mask_gt
-    |-- val
+    |-- test
         |-- image 
         |-- image_gt  
         |-- medium_map
