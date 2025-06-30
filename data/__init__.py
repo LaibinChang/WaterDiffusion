@@ -2,7 +2,7 @@
 import logging
 from re import split
 import torch.utils.data
-from data.LRHR_dataset import LRHRDataset as D
+from data.USOD_dataset import USODDataset as D
 
 def create_dataloader(dataset, dataset_opt, phase):
     '''create dataloader '''
