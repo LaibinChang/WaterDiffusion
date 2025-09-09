@@ -10,7 +10,7 @@ from torchvision.utils import save_image
 from tqdm import tqdm
 import os
 import utils
-
+from thop import profile
 
 
 def _warmup_beta(linear_start, linear_end, n_timestep, warmup_frac):
@@ -55,6 +55,7 @@ def make_beta_schedule(schedule, n_timestep, linear_start=1e-4, linear_end=2e-2,
 
 
 # gaussian diffusion trainer class
+
 def exists(x):
     return x is not None
 
@@ -65,9 +66,8 @@ def default(val, d):
     return d() if isfunction(d) else d
 
 def binary_gaussian_noise_like(maskR, threshold=0.0):
-        Mask = maskR[:, 0, :, :].unsqueeze(1)
-        gaussian_noise = torch.randn_like(Mask)  
-        binary_noise = (gaussian_noise > threshold).float()  
+        gaussian_noise = torch.randn_like(maskR)  # 生成与 maskR 相同大小的高斯噪声张量
+        binary_noise = (gaussian_noise > threshold).float()  # 二值化处理
         return binary_noise
 
 class GaussianDiffusion(nn.Module):
@@ -94,6 +94,7 @@ class GaussianDiffusion(nn.Module):
 
         if schedule_opt is not None:
             pass
+            # self.set_new_noise_schedule(schedule_opt)
 
     def set_loss(self, device):
         if self.loss_type == 'l1':
@@ -195,55 +196,70 @@ class GaussianDiffusion(nn.Module):
         return model_mean + noise * (0.5 * model_log_variance).exp()
 
     @torch.no_grad()
-    def p_sample_loop(self, x_lr, mtm, continous=False):
+    def p_sample_loop(self, x_lr, mask_0, mtm, continous=False):
         device = self.betas.device
         n = x_lr.size(0)
         noise = torch.randn_like(x_lr)
-        gaussian_noise = noise[:, 0, :, :].unsqueeze(1)
-        mask_noise = (gaussian_noise > 0.0).float() 
-        #mask_noise = binary_gaussian_noise_like(mtm)
         skip = self.num_timesteps // 5
         # skip = self.num_timesteps // 25
         seq = range(0, self.num_timesteps, skip)
-        #x0_preds = []
-        #mask0_preds = []
+        x0_preds = []
         xs = [noise]
-        masks = [mask_noise]
+        mask_preds = []
         b = self.betas
         eta = 0.
         gamma_ori = 0.1
         idx = 0
         # sample_inter = (1 | (self.num_timesteps//10))
         seq_next = [-1] + list(seq[:-1])
-    
+        #mask_0 = binary_gaussian_noise_like(mtm)
+        mask = mask_0
         for i, j in zip(reversed(seq), reversed(seq_next)):
             t = (torch.ones(n) * i).to(device)
             next_t = (torch.ones(n) * j).to(device)
             at = self.compute_alpha(b, t.long())
             at_next = self.compute_alpha(b, next_t.long())
             xt = xs[-1].to('cuda')
-            maskt = masks[-1].to('cuda')
-
-            et, mask_noise_update = self.denoise_fn(torch.cat([x_lr, maskt, xt], dim=1), mtm, t, continous)
-            
+            if i >= len(b)*0.2:
+                et, mask = self.denoise_fn(torch.cat([x_lr, mask, xt], dim=1), mtm, t, continous)
+            else:
+                et, mask = self.denoise_fn(torch.cat([x_lr, mask, xt], dim=1), mtm, t, continous)
+                
             x0_t = (xt - et * (1 - at).sqrt()) / at.sqrt()
-            mask0_t = (maskt - mask_noise_update *(1 - at).sqrt()) / at.sqrt()
+            x0_preds.append(x0_t.to('cuda'))
+            mask_preds.append(mask.to('cuda'))
 
-            noise1 = torch.randn_like(x_lr)
-            gaussian_noise1 = noise1[:, 0, :, :].unsqueeze(1)
-            mask_noise1 = (gaussian_noise1 > 0.0).float()
+            #x0_preds.append(x0_t.to('cpu'))
+            #mask_preds.append(mask.to('cpu'))
             c1 = eta * ((1 - at / at_next) * (1 - at_next) / (1 - at)).sqrt()
             c2 = ((1 - at_next) - c1 ** 2).sqrt()
-            xt_next = at_next.sqrt() * x0_t + c1 * noise1 + c2 * et
-            mask_next = at_next.sqrt() * mask0_t + c1 * mask_noise1 + c2 * mask_noise_update
+            xt_next = at_next.sqrt() * x0_t + c1 * torch.randn_like(x_lr) + c2 * et
             #xs.append(xt_next.to('cpu'))
             xs.append(xt_next.to('cuda'))
-            masks.append(mask_next.to('cuda'))
         ret_img = xs
-        mask_preds = masks
 
         return ret_img[-1], mask_preds[-1]
-
+        # if not self.conditional:
+        #     shape = x_in
+        #     img = torch.randn(shape, device=device)
+        #     ret_img = img
+        #     for i in tqdm(reversed(range(0, self.num_timesteps)), desc='sampling loop time step', total=self.num_timesteps):
+        #         img = self.p_sample(img, i)
+        #         if i % sample_inter == 0:
+        #             ret_img = torch.cat([ret_img, mask, img], dim=0)
+        # else:
+        #     x = x_in
+        #     shape = x.shape
+        #     img = torch.randn(shape, device=device)
+        #     ret_img = x
+        #     for i in tqdm(reversed(range(0, self.num_timesteps)), desc='sampling loop time step', total=self.num_timesteps):
+        #         img = self.p_sample(img, mask, i, condition_x=x)
+        #         if i % sample_inter == 0:
+        #             ret_img = torch.cat([ret_img, mask, img], dim=0)
+        # if continous:
+        #     return ret_img
+        # else:
+        #     return ret_img[-1]
 
     @torch.no_grad()
     def sample(self, batch_size=1, continous=False):
@@ -252,8 +268,8 @@ class GaussianDiffusion(nn.Module):
         return self.p_sample_loop((batch_size, channels, image_size, image_size), continous)
 
     @torch.no_grad()
-    def super_resolution(self, x_lr, mtm, continous=False):
-        ret_img, mask_preds = self.p_sample_loop(x_lr, mtm, continous)
+    def super_resolution(self, x_lr, mask, mtm, continous=False):
+        ret_img, mask_preds = self.p_sample_loop(x_lr, mask, mtm, continous)
         return ret_img, mask_preds
 
     def q_sample(self, x_start, continuous_sqrt_alpha_cumprod, noise=None):
@@ -265,12 +281,11 @@ class GaussianDiffusion(nn.Module):
             (1 - continuous_sqrt_alpha_cumprod**2).sqrt() * noise
         )
 
-    def p_losses(self, x_in, noise=None,continous=False):
+    def p_losses(self, x_in, noise=None):
         x_start = x_in['HR']
         maskR = x_in['maskR']
         [n, c, h, w] = x_start.shape
         #maskT = binary_gaussian_noise_like(maskR)
-        #num_ones = torch.sum(maskT == 1).item()
         # t = np.random.randint(1, self.num_timesteps + 1)
         t = torch.randint(low=0, high=self.num_timesteps, size=(n // 2 + 1,)).to(x_start.device)
         t = torch.cat([t, self.num_timesteps - t - 1], dim=0)[:n]
@@ -280,7 +295,7 @@ class GaussianDiffusion(nn.Module):
         x_noisy = x_start * a.sqrt() + e * (1.0 - a).sqrt()
         x_recon, updated_mask = self.denoise_fn(
             torch.cat([x_in['SR'], x_in['mask'], x_noisy], dim=1), x_in['MTM'], t.float())
-        
+
         #SR_img, Mask_predect = self.p_sample_loop(x_in['SR'],x_in['mask'], x_in['MTM'],b)
 
         #ret_img[-1], mask_preds[-1]
@@ -332,9 +347,8 @@ class GaussianDiffusion(nn.Module):
 
         loss_final = loss_e + loss_mask*0.5
 
-        
-
         return loss_final
+
 
     def forward(self, x, *args, **kwargs):
         return self.p_losses(x, *args, **kwargs)

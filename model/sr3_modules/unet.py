@@ -18,7 +18,6 @@ def default(val, d):
         return val
     return d() if isfunction(d) else d
 
-# PositionalEncoding Source： https://github.com/lmnt-com/wavegrad/blob/master/src/wavegrad/model.py
 class PositionalEncoding(nn.Module):
     def __init__(self, dim):
         super().__init__()
@@ -79,7 +78,6 @@ class Downsample(nn.Module):
 
 
 # building block modules
-
 class Block(nn.Module):
     def __init__(self, dim, dim_out, groups=32, dropout=0):
         super().__init__()
@@ -266,7 +264,6 @@ class UNet(nn.Module):
 
         self.channel_attention = SqueezeExcitationLayer(pre_channel, pre_channel, ratio=4, layer_name='channel_layer')
 
-        ###################### init CSNorm ##################
         self.gate = Generate_gate()
         for i in range(512):
             setattr(self, 'CSN_' + str(i), nn.InstanceNorm2d(1, affine=True))
@@ -277,8 +274,6 @@ class UNet(nn.Module):
         x_lr = x[:, :3, :, :]
         x_mask = x[:, 3, :, :].unsqueeze(1)
         x_noisy = x[:, 4:, :, :]
-        # updated_mask = self.mask_update(x_noisy, x_mask)
-        # x_updated_mask = updated_mask.detach()
         x = torch.cat((x_lr, x_mask, x_noisy), dim=1)
 
         t = self.noise_level_mlp(time) if exists(
@@ -291,7 +286,6 @@ class UNet(nn.Module):
             else:
                 x = layer(x)
             feats.append(x)
-            
         if continous:
             gate = self.gate(x)
             lq_copy = torch.cat([getattr(self, 'CSN_' + str(i))(x[:,i,:,:][:,None,:,:]) for i in range(512)], dim=1)
@@ -306,8 +300,6 @@ class UNet(nn.Module):
         for layer in self.ups:
             if isinstance(layer, ResnetBlocWithAttn):
                 feat = feats.pop()
-                # if x.shape[2]!=feat.shape[2] or x.shape[3]!=feat.shape[3]:
-                #     feat = F.interpolate(feat, x.shape[2:])
                 x = layer(torch.cat((x, feat), dim=1), t)
                 mtm = F.interpolate(mtm, size=(x.size(2), x.size(3)), mode='bilinear', align_corners=False)
                 x = x + (x * mtm)
@@ -316,17 +308,9 @@ class UNet(nn.Module):
                 x = layer(x)
                 mtm = F.interpolate(mtm, size=(x.size(2), x.size(3)), mode='bilinear', align_corners=False)
                 x = x + (x * mtm)
+        x_attention=self.channel_attention(x)
 
-        #f1 = self.final_conv(x)
-        #attention_x = x + (x * mtm)
-        #save_image(f1, 'ret_img-1.jpg')
-        #x_attention=self.channel_attention(x)
-
-        #gate = self.gate(attention_x)
-        #lq_copy = torch.cat([getattr(self, 'CSN_' + str(i))(attention_x[:,i,:,:][:,None,:,:]) for i in range(64)], dim=1)
-        #gate_x = gate * (lq_copy) + (1-gate) * attention_x
-
-        f = self.final_conv(x)
+        f = self.final_conv(x_attention)
 
         m=self.mask_tail(x)
 
@@ -371,6 +355,7 @@ class SqueezeExcitationLayer(nn.Module):
 
     def forward(self, input_x):
         squeeze = self.global_avg_pooling(input_x)
+
         excitation = self.fc1(squeeze.view(squeeze.size(0), -1))
         excitation = self.relu(excitation)
 
