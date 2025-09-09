@@ -9,7 +9,8 @@
         "tb_logger": "tb_logger",
         "results": "results",
         "checkpoint": "checkpoint",
-        "resume_state": null
+        //"resume_state": null
+        "resume_state": "./checkpoint/model_latest"
     },
     "datasets": {
         "train": {
@@ -95,3 +96,4 @@
         "project": "distributed_high_sr_ffhq"
     }
 }
+
