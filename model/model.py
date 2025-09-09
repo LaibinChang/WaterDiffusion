@@ -106,10 +106,10 @@ class DDPM(BaseModel):
         with torch.no_grad():
             if isinstance(self.netG, nn.DataParallel):
                 self.SR = self.netG.module.super_resolution(
-                    self.data['SR'], self.data['MTM'], continous)
+                    self.data['SR'], self.data['mask'], self.data['MTM'], continous)
             else:
                 self.SR = self.netG.super_resolution(
-                    self.data['SR'], self.data['MTM'], continous)
+                    self.data['SR'], self.data['mask'], self.data['MTM'], continous)
         self.netG.train()
 
     def sample(self, batch_size=1, continous=False):
@@ -213,4 +213,3 @@ class DDPM(BaseModel):
             #     gen_path), strict=(not self.opt['model']['finetune_norm']))
             network.load_state_dict(torch.load(
                 gen_path), strict=False)
-
