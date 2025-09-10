@@ -5,46 +5,52 @@ Underwater salient object detection (USOD) plays a pivotal role in various visio
 
 ![image](https://github.com/user-attachments/assets/e1250a0c-462b-48be-9df2-aa1e3213adf4)
 
-## Requirement
+## 🌊 Requirement
 * Python 3.9
 * Pytorch 2.0.1
 * CUDA 11.8
 
-## Training
-1. Download the [sample data](https://drive.google.com/file/d/1yClKFejFLiB_k7wY_-2If0GJ30SZiKQE/view?usp=drive_link) and set it to the following structure.
+## 🚀 Training
 
-```
-|-- WaterDatasets
-    |-- train
-        |-- image 
-        |-- image_gt  
-        |-- medium_map
-        |-- mask  
-        |-- mask_gt
-    |-- test
-        |-- image 
-        |-- image_gt  
-        |-- medium_map
-        |-- mask  
-        |-- mask_gt
+1. Download the [sample data](https://drive.google.com/file/d/1yClKFejFLiB_k7wY_-2If0GJ30SZiKQE/view?usp=drive_link) and organize it into the following structure:
+
+   ```
+   |-- WaterDatasets
+       |-- train
+           |-- image 
+           |-- image_gt  
+           |-- medium_map
+           |-- mask  
+           |-- mask_gt
+       |-- test
+           |-- image 
+           |-- image_gt  
+           |-- medium_map
+           |-- mask  
+           |-- mask_gt
+   ```
+
+2. Revise the hyperparameters in `config/config.json` according to your setup.
+
+3. Begin training:
+
+   ```bash
+   python train.py
+   ```
+---
+
+## 🧪 Testing
+
+```bash
+python test.py
 ```
 
-2. Revise the following hyper parameters in the `config/config.json` according to your situation.
-   
-3. Begin the training.
+---
 
-```
-python train.py
-```
+## 📖 Citation
 
-## Testing
+If you find our work useful, please cite:
 
-```
- Python test.py
-```
-
-## Citation
-please cite our publication:
 ```
 @inproceedings{chang2025waterdiffusion,
   title={WaterDiffusion: Learning a Prior-involved Unrolling Diffusion for Joint Underwater Saliency Detection and Visual Restoration},
@@ -57,5 +63,9 @@ please cite our publication:
 }
 ```
 
-## Notes
-If you have any questions, please feel free to contact us at changlb666@163.com.
+---
+
+## 📝 Notes
+
+* ❓ If you have any questions, please feel free to contact us at **[changlb666@163.com](mailto:changlb666@163.com)**.
+* 🌐 If you need **qualitative visualization results on other datasets**, please reach out to us directly.
