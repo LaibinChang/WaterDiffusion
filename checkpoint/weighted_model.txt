@@ -1,1 +1,2 @@
-Please put the pretrained weights here.
+Please download from this link and put the pretrained weights in this folder.
+https://drive.google.com/file/d/1f0acUlgNHibaE3QiGiHpIICtfn-0NVlP/view?usp=drive_link
